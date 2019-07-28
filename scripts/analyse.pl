@@ -7,7 +7,6 @@ use feature 'say';
 use Getopt::Long;
 use Pod::Usage;
 use XML::LibXML;
-use XML::LibXML::XPathContext;
 use Data::Dumper;
 
 my ($file);
@@ -27,6 +26,22 @@ say length($non_space_text);
 my @normalized_lines = map {s/^\s+|\s+$//;$_} grep {/\w/} split("\n", $normalized_text);
 say length(join("",@normalized_lines)); 
 
-my $href_nodelist = $dom->getElementsByTagName("a");
-say $href_nodelist->size();
+my $href_nodes = $dom->getElementsByTagName("a");
+say $href_nodes->size();
 
+my $section_nodes = $dom->getElementsByTagName("section");
+my $sections = {};
+for my $section_node (@$section_nodes) {
+	if (my $id = $section_node->getAttribute('id')) {
+		$sections->{$id} = undef;  
+	}
+}
+my $broken_links_counter = 0;
+foreach my $href_node (@$href_nodes) { 
+	my $id_ref_name = $href_node->getAttribute('l:href');
+	$id_ref_name =~ s/^\#//;
+	unless (exists $sections->{$id_ref_name}) {
+		$broken_links_counter++ ;
+	}
+}  
+say $broken_links_counter;
